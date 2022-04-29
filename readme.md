@@ -4,7 +4,7 @@ Testing the s3 compatibility of cloudflare.
 ## Setting up
 
 following:
-```md
+
 From mr. matthew breaking changes in the cloudflare discord
 Endpoint: https://{account_id}.r2.cloudflarestorage.com
 Access Key:  id of the API Token
@@ -30,7 +30,7 @@ To get the sha256sum of your token, I wrote the token to a new file, .tmp (in th
 ran source .tmp, then ran `echo -n "$CLOUDFLARE_API_TOKEN" | sha256sum | cut -f 1 -d " "`.  This will be your Secret Key. (you may also want to also remove .tmp now and run unset CLOUDFLARE_API_TOKEN)
 
 For anyone having problems with sha256, make sure that you are not inputting a new line after your token (that's why I used echo with the -n flag) when passing it to sha256.
-``` 
+
 
 create a `.env` file with:
 ```sh
