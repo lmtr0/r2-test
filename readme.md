@@ -16,6 +16,7 @@ Create an API token with the Account.Workers R2 Storage.Edit permission, you can
 After creating the token (you might want to do this in a new tab or copy your api token somewhere safe first), 
 open browsers devtools first then go to the API Tokens list page, find the **GET https://dash.cloudflare.com/api/v4/user/tokens?per_page=250** XHR request and view the response body.  
 Under the result array find the token you created, and copy the id (should look like a UUIDv4 without any dashes).  id will be your Access Key.
+```json
 {
 	"result": [
 		{
@@ -25,6 +26,7 @@ Under the result array find the token you created, and copy the id (should look 
 	]
     // rest of the request
 }
+```
 
 To get the sha256sum of your token, I wrote the token to a new file, .tmp (in the format CLOUDFLARE_API_TOKEN="{api_token}"), 
 ran source .tmp, then ran `echo -n "$CLOUDFLARE_API_TOKEN" | sha256sum | cut -f 1 -d " "`.  This will be your Secret Key. (you may also want to also remove .tmp now and run unset CLOUDFLARE_API_TOKEN)
