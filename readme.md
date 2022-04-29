@@ -8,7 +8,7 @@ following:
 From mr. matthew breaking changes in the cloudflare discord <br>
 | name | value |
 | --- | --- | 
-| Endpoint | https://{account_id}.r2.cloudflarestorage.com |
+| Endpoint | `https://{account_id}.r2.cloudflarestorage.com` |
 | Access Key | id of the API Token |
 | Secret Key | sha256sum of the API Token |
 
