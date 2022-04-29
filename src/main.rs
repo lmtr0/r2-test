@@ -3,6 +3,18 @@ use serde_json::json;
 
 #[tokio::main]
 async fn main() {
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "[{}][{}] {}",
+                record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Debug)
+        .chain(std::io::stdout())
+        .apply().unwrap();
     dotenv::dotenv().expect("Failed to load evironment");
 
     let secret_key = std::env::var("CF_SHA256_API_KEY").expect("Consider putting CF_SHA256_API_KEY in your .env file");
@@ -13,7 +25,7 @@ async fn main() {
 
     let region = Region::Custom {
         region: format!(""),
-        endpoint: format!("https://{}.r2.cloudflarestorage.com", account_id),
+        endpoint: format!("https://r2.cloudflarestorage.com/higenku-suite"),
     }; 
 
     let secret_key = Some(secret_key.as_str());
@@ -21,8 +33,9 @@ async fn main() {
 
     let credentials = Credentials::new(access_key, secret_key, None, None, Some("Hellow")).unwrap();
 
-    let mut bucket = Bucket::new("higenku-suite", region, credentials).unwrap();
-    bucket.set_listobjects_v2();
+    // let mut bucket = Bucket::new(&account_id, region, credentials).unwrap();
+    let bucket = Bucket::new(&account_id, region, credentials).unwrap();
+    // bucket.set_listobjects_v2();
 
     let content = json!({
         "data": "hello there",
@@ -36,7 +49,7 @@ async fn main() {
     let content = content.to_string();
     let content = content.as_bytes();
 
-    let e = bucket.put_object_with_content_type(&path, content, "application/json").await.unwrap();
+    let e = bucket.put_object(&path, content).await.unwrap();
     
     println!("Put:");
     println!("{:?}",String::from_utf8(e.0));
