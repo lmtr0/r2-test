@@ -6,9 +6,11 @@ Testing the s3 compatibility of cloudflare.
 following:
 
 From mr. matthew breaking changes in the cloudflare discord <br>
-Endpoint: https://{account_id}.r2.cloudflarestorage.com <br>
-Access Key:  id of the API Token <br>
-Secret Key: sha256sum of the API Token <br>
+| name | value |
+| --- | --- | 
+| Endpoint | https://{account_id}.r2.cloudflarestorage.com |
+| Access Key | id of the API Token |
+| Secret Key | sha256sum of the API Token |
 
 Create an API token with the Account.Workers R2 Storage.Edit permission, you can also choose to allow all accounts or just one.  <br>
 After creating the token (you might want to do this in a new tab or copy your api token somewhere safe first), <br>
