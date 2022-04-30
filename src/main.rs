@@ -41,12 +41,12 @@ async fn main() {
         .load().await;
     let res = Client::new(&shared_config)
         .list_objects_v2()
-        .set_bucket(Some("higenku-suite".to_string()))
+        .set_bucket(Some("other".to_string()))
         .send().await;
 
     match res {
-        Ok(e) => println!("\n\n\n{:#?}", e),
-        Err(e) => println!("\n\n\n{:#?}", e),
+        Ok(e) => println!("\n\n\nEncoding: {:?}", e.encoding_type),
+        Err(err) => println!("\n\n\n{:#?}", err),
     };
     // let credentials = Credentials::new(access_key, secret_key, None, None, Some("Hellow")).unwrap();
 
