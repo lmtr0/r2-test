@@ -1,13 +1,12 @@
-use s3::{creds::Credentials, region::Region, Bucket};
+use s3::{creds::Credentials, region::Region, Bucket, BucketConfiguration};
+use serde_json::json;
 
 // use serde_json::json;
 
 struct Storage {
-    name: String,
     region: Region,
     credentials: Credentials,
     bucket: String,
-    location_supported: bool,
 }
 
 const MESSAGE: &str = "{ \"name\": \"value\" }";
@@ -32,7 +31,7 @@ async fn main() {
     let access_key = std::env::var("CF_API_KEY_ID").expect("Consider putting CF_API_KEY_ID in your .env file");
     let account_id = std::env::var("CF_ACCOUNT_ID").expect("Consider putting CF_ACCOUNT_ID in your .env file");
 
-    let endpoint = format!("https://r2.cloudflarestorage.com/suite");
+    let endpoint = format!("https://{}.r2.cloudflarestorage.com", account_id);
 
     let credentials = Credentials::new(
         Some(&access_key),
@@ -42,34 +41,47 @@ async fn main() {
         None
     ).expect("Failed to create credentials");
 
+    println!("Creds: {:#?}", credentials);
+    println!("Endpoint: {:#?}", endpoint);
+
+
 
     let backend = Storage {
-        name: "r2".into(),
         region: Region::Custom {
-            region: "".into(),
+            region: "auto".into(),
             endpoint,
         },
         credentials,
-        bucket: account_id,
-        location_supported: false,
+        bucket: "suite".to_string(),
     };
 
-    let bucket = Bucket::new(&backend.bucket, backend.region, backend.credentials).expect("Failed to create bucket");
 
-    // HEAD
-    println!("====================");
-    let (data, _) = bucket.head_object("/file.json").await.expect("Failed to head object");
-    println!("{:#?}", data);
+
+    let mut bucket = Bucket::new(&backend.bucket, backend.region, backend.credentials).expect("Failed to create bucket")
+        .with_path_style();
+    bucket.set_listobjects_v2();
     
-    // GET
-    println!("====================");
-    let (data, _) = bucket.get_object("/file.json").await.expect("Failed to get object");
-    let string = String::from_utf8(data).unwrap();
-    println!("{}", string);
+    let path = "/something";
     
     // PUT
-    println!("====================");
-    let (message, _) = bucket.put_object_with_content_type("/file.json", MESSAGE.as_bytes(), "application/json").await.expect("Failed to get object");
-    println!("{}", String::from_utf8(message).unwrap());
+    println!("====================PUT");
+    bucket.add_header("x-amz-meta-key", "value");
+    let (message, _) = bucket.put_object_with_content_type(path, MESSAGE.as_bytes(), "application/json").await.expect("Failed to get object");
+    println!("MESSAGE: {}", String::from_utf8(message).unwrap());
+
+    // HEAD
+    println!("====================HEAD");
+    let (data, _) = bucket.head_object(path).await.expect("Failed to head object");
+    println!("META {:?}", data.metadata);
+    
+    // GET
+    println!("====================GET");
+    let (data, _) = bucket.get_object(path).await.expect("Failed to get object");
+    let string = String::from_utf8(data).unwrap();
+    println!("DATA: {}", string);
+
+    // Delete
+    println!("====================DELETE");
+    let (_, _) = bucket.delete_object(path).await.expect("Failed to get object");
     
 }
