@@ -10,7 +10,7 @@ struct Storage {
     location_supported: bool,
 }
 
-const MESSAGE: &str = "Hi there";
+const MESSAGE: &str = "{ \"name\": \"value\" }";
 
 #[tokio::main]
 async fn main() {
@@ -56,24 +56,20 @@ async fn main() {
 
     let bucket = Bucket::new(&backend.bucket, backend.region, backend.credentials).expect("Failed to create bucket");
 
-
-    if backend.location_supported {
-        // Get bucket location
-        println!("{:?}", bucket.location().await);
-    }
-
-    let (message, code) = bucket.put_object("test_file", MESSAGE.as_bytes()).await.expect("Failed to get object");
-    // println!("{}", bucket.presign_get("test_file", 604801, None)?);
-    println!("{}", String::from_utf8(message).unwrap());
-    assert_eq!(200, code);
-
-
-    // Get the "test_file" contents and make sure that the returned message
-    // matches what we sent.
-    let (data, code) = bucket.get_object("test_file").await.expect("Failed to get object");
+    // HEAD
+    println!("====================");
+    let (data, _) = bucket.head_object("/file.json").await.expect("Failed to head object");
+    println!("{:#?}", data);
+    
+    // GET
+    println!("====================");
+    let (data, _) = bucket.get_object("/file.json").await.expect("Failed to get object");
     let string = String::from_utf8(data).unwrap();
-    // println!("{}", string);
-    assert_eq!(200, code);
-    assert_eq!(MESSAGE, string);
-
+    println!("{}", string);
+    
+    // PUT
+    println!("====================");
+    let (message, _) = bucket.put_object_with_content_type("/file.json", MESSAGE.as_bytes(), "application/json").await.expect("Failed to get object");
+    println!("{}", String::from_utf8(message).unwrap());
+    
 }
