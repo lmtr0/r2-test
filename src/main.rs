@@ -1,7 +1,16 @@
-// use s3::{Bucket, Region, creds::Credentials};
+use s3::{creds::Credentials, region::Region, Bucket};
 
-use aws_sdk_s3::{Client, Endpoint, Credentials};
 // use serde_json::json;
+
+struct Storage {
+    name: String,
+    region: Region,
+    credentials: Credentials,
+    bucket: String,
+    location_supported: bool,
+}
+
+const MESSAGE: &str = "Hi there";
 
 #[tokio::main]
 async fn main() {
@@ -23,68 +32,48 @@ async fn main() {
     let access_key = std::env::var("CF_API_KEY_ID").expect("Consider putting CF_API_KEY_ID in your .env file");
     let account_id = std::env::var("CF_ACCOUNT_ID").expect("Consider putting CF_ACCOUNT_ID in your .env file");
 
-    println!("Creds:\nAKey: {}\nSKey: {}\nAID: {}", access_key, secret_key, account_id);
+    let endpoint = format!("https://r2.cloudflarestorage.com/suite");
 
-    // let region = Region::Custom {
-    //     region: format!("earth"),
-    //     endpoint: format!("https://r2.cloudflarestorage.com/higenku-suite"),
-    // }; 
+    let credentials = Credentials::new(
+        Some(&access_key),
+        Some(&secret_key),
+        None,
+        None,
+        None
+    ).expect("Failed to create credentials");
 
-    let secret_access_key = secret_key.as_str();
-    let access_key_id = access_key.as_str();
 
-
-    let shared_config = aws_config::from_env()
-        .endpoint_resolver(Endpoint::immutable("https://982723f0682411a61ffe979a716fd7e1.r2.cloudflarestorage.com".parse().expect("invalid URI")))
-        .region("earth")
-        .credentials_provider(Credentials::new(access_key_id, secret_access_key, None, None, "default"))
-        .load().await;
-    let res = Client::new(&shared_config)
-        .list_objects_v2()
-        .set_bucket(Some("other".to_string()))
-        .send().await;
-
-    match res {
-        Ok(e) => println!("\n\n\nEncoding: {:?}", e.encoding_type),
-        Err(err) => println!("\n\n\n{:#?}", err),
+    let backend = Storage {
+        name: "r2".into(),
+        region: Region::Custom {
+            region: "".into(),
+            endpoint,
+        },
+        credentials,
+        bucket: account_id,
+        location_supported: false,
     };
-    // let credentials = Credentials::new(access_key, secret_key, None, None, Some("Hellow")).unwrap();
 
-    // let mut bucket = Bucket::new(&account_id, region, credentials).unwrap();
-    // let bucket = Bucket::new(&account_id, region, credentials).unwrap();
-    // bucket.set_listobjects_v2();
-
-    // let content = json!({
-    //     "data": "hello there",
-    //     "owner": "hello there"
-    // });
-
-    // println!("\n\n");
-    // println!("Started");
-    
-    // let path = format!("/higenku.jpg");
-
-    // let content = content.to_string();
-    // let content = content.as_bytes();
-
-    // let e = bucket.get_object(&path).await.unwrap();
-    
-    // println!("Put");
-    // println!("{:?}", e.1);
-    
-    // let (head, _) =  bucket.head_object(&path).await.unwrap();
-    // println!("Head");
-    // println!("{:?}", head.e_tag);
-    
-    // let (data, _) = bucket.get_object(&path).await.unwrap();
-    
-    // println!("Get");
-    // println!("{:?}", String::from_utf8(data));
+    let bucket = Bucket::new(&backend.bucket, backend.region, backend.credentials).expect("Failed to create bucket");
 
 
-    // let (data, code) = bucket.get_object("/higenku.jpg").await.unwrap();
-    // println!("Get2");
-    // println!("{}", code);
-    // println!("{}", String::from_utf8(data).unwrap());
+    if backend.location_supported {
+        // Get bucket location
+        println!("{:?}", bucket.location().await);
+    }
+
+    let (message, code) = bucket.put_object("test_file", MESSAGE.as_bytes()).await.expect("Failed to get object");
+    // println!("{}", bucket.presign_get("test_file", 604801, None)?);
+    println!("{}", String::from_utf8(message).unwrap());
+    assert_eq!(200, code);
+
+
+    // Get the "test_file" contents and make sure that the returned message
+    // matches what we sent.
+    let (data, code) = bucket.get_object("test_file").await.expect("Failed to get object");
+    let string = String::from_utf8(data).unwrap();
+    // println!("{}", string);
+    assert_eq!(200, code);
+    assert_eq!(MESSAGE, string);
 
 }
