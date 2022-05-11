@@ -1,5 +1,4 @@
-use s3::{creds::Credentials, region::Region, Bucket, BucketConfiguration};
-use serde_json::json;
+use s3::{creds::Credentials, region::Region, Bucket};
 
 // use serde_json::json;
 
@@ -27,8 +26,8 @@ async fn main() {
         .apply().unwrap();
     dotenv::dotenv().expect("Failed to load evironment");
 
-    let secret_key = std::env::var("CF_SHA256_API_KEY").expect("Consider putting CF_SHA256_API_KEY in your .env file");
-    let access_key = std::env::var("CF_API_KEY_ID").expect("Consider putting CF_API_KEY_ID in your .env file");
+    let secret_key = std::env::var("SECRET_KEY").expect("Consider putting CF_SHA256_API_KEY in your .env file");
+    let access_key = std::env::var("ACCESS_KEY").expect("Consider putting CF_API_KEY_ID in your .env file");
     let account_id = std::env::var("CF_ACCOUNT_ID").expect("Consider putting CF_ACCOUNT_ID in your .env file");
 
     let endpoint = format!("https://{}.r2.cloudflarestorage.com", account_id);
@@ -61,13 +60,22 @@ async fn main() {
         .with_path_style();
     bucket.set_listobjects_v2();
     
-    let path = "/something";
+    let path = "/jae3r5wer4wq5erwejrn";
     
     // PUT
     println!("====================PUT");
     bucket.add_header("x-amz-meta-key", "value");
     let (message, _) = bucket.put_object_with_content_type(path, MESSAGE.as_bytes(), "application/json").await.expect("Failed to get object");
     println!("MESSAGE: {}", String::from_utf8(message).unwrap());
+    
+    
+    // LIST
+    println!("====================LIST");
+    let e = bucket.list("".to_string(), None).await.expect("Couldn't listv2");
+    for i in e {
+        println!("{:?}", i);
+        println!("{:#?}", i.contents);
+    }
 
     // HEAD
     println!("====================HEAD");
