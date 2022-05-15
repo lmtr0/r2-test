@@ -91,5 +91,4 @@ async fn main() {
     // Delete
     println!("====================DELETE");
     let (_, _) = bucket.delete_object(path).await.expect("Failed to get object");
-    
 }
