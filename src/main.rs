@@ -12,18 +12,18 @@ const MESSAGE: &str = "{ \"name\": \"value\" }";
 
 #[tokio::main]
 async fn main() {
-    fern::Dispatch::new()
-        .format(|out, message, record| {
-            out.finish(format_args!(
-                "[{}][{}] {}",
-                record.target(),
-                record.level(),
-                message
-            ))
-        })
-        .level(log::LevelFilter::Debug)
-        .chain(std::io::stdout())
-        .apply().unwrap();
+    // fern::Dispatch::new()
+    //     .format(|out, message, record| {
+    //         out.finish(format_args!(
+    //             "[{}][{}] {}",
+    //             record.target(),
+    //             record.level(),
+    //             message
+    //         ))
+    //     })
+    //     .level(log::LevelFilter::Debug)
+    //     .chain(std::io::stdout())
+    //     .apply().unwrap();
     dotenv::dotenv().expect("Failed to load evironment");
 
     let secret_key = std::env::var("SECRET_KEY").expect("Consider putting CF_SHA256_API_KEY in your .env file");
@@ -60,35 +60,44 @@ async fn main() {
         .with_path_style();
     bucket.set_listobjects_v2();
     
-    let path = "/jae3r5wer4wq5erwejrn";
     
     // PUT
     println!("====================PUT");
     bucket.add_header("x-amz-meta-key", "value");
-    let (message, _) = bucket.put_object_with_content_type(path, MESSAGE.as_bytes(), "application/json").await.expect("Failed to get object");
-    println!("MESSAGE: {}", String::from_utf8(message).unwrap());
     
+    for i in 0..10 {
+        let path = format!("/dir/file_{}", i);
+
+        let (message, _) = bucket.put_object_with_content_type(path, MESSAGE.as_bytes(), "application/json").await.expect("Failed to get object");
+        println!("MESSAGE: {}", String::from_utf8(message).unwrap());
+        
+    }
     
     // LIST
     println!("====================LIST");
     let e = bucket.list("".to_string(), None).await.expect("Couldn't listv2");
     for i in e {
         println!("{:?}", i);
+        println!("-------------====================-------------");
         println!("{:#?}", i.contents);
     }
 
-    // HEAD
-    println!("====================HEAD");
-    let (data, _) = bucket.head_object(path).await.expect("Failed to head object");
-    println!("META {:?}", data.metadata);
-    
-    // GET
-    println!("====================GET");
-    let (data, _) = bucket.get_object(path).await.expect("Failed to get object");
-    let string = String::from_utf8(data).unwrap();
-    println!("DATA: {}", string);
+    for i in 0..10 {
+        let path = format!("/dir/file_{}", i);
 
-    // Delete
-    println!("====================DELETE");
-    let (_, _) = bucket.delete_object(path).await.expect("Failed to get object");
+        // HEAD
+        println!("====================HEAD");
+        let (data, _) = bucket.head_object(&path).await.expect("Failed to head object");
+        println!("META {:?}", data.metadata);
+        
+        // GET
+        println!("====================GET");
+        let (data, _) = bucket.get_object(&path).await.expect("Failed to get object");
+        let string = String::from_utf8(data).unwrap();
+        println!("DATA: {}", string);
+    
+        // Delete
+        println!("====================DELETE");
+        let (_, _) = bucket.delete_object(&path).await.expect("Failed to get object");
+    }
 }
