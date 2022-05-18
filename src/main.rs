@@ -67,6 +67,7 @@ async fn main() {
     
     for i in 0..10 {
         let path = format!("/dir/file_{}", i);
+        bucket.add_header("x-amz-meta-path", &path);
 
         let (message, _) = bucket.put_object_with_content_type(path, MESSAGE.as_bytes(), "application/json").await.expect("Failed to get object");
         println!("MESSAGE: {}", String::from_utf8(message).unwrap());
@@ -77,7 +78,6 @@ async fn main() {
     println!("====================LIST");
     let e = bucket.list("".to_string(), None).await.expect("Couldn't listv2");
     for i in e {
-        println!("{:?}", i);
         println!("-------------====================-------------");
         println!("{:#?}", i.contents);
     }
@@ -90,14 +90,14 @@ async fn main() {
         let (data, _) = bucket.head_object(&path).await.expect("Failed to head object");
         println!("META {:?}", data.metadata);
         
-        // GET
-        println!("====================GET");
-        let (data, _) = bucket.get_object(&path).await.expect("Failed to get object");
-        let string = String::from_utf8(data).unwrap();
-        println!("DATA: {}", string);
+        // // GET
+        // println!("====================GET");
+        // let (data, _) = bucket.get_object(&path).await.expect("Failed to get object");
+        // let string = String::from_utf8(data).unwrap();
+        // println!("DATA: {}", string);
     
         // Delete
-        println!("====================DELETE");
+        // println!("====================DELETE");
         let (_, _) = bucket.delete_object(&path).await.expect("Failed to get object");
     }
 }
